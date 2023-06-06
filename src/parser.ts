@@ -1,4 +1,5 @@
-import { Instruction, POSSIBLE_OPS } from '../cpu/cpu'
+import { Instruction } from './cpu'
+import { POSSIBLE_CPU_OPERATIONS } from './operations'
 
 export function parse(assembly: string): Instruction[] {
   const lines = assembly.split('\n')
@@ -8,8 +9,9 @@ export function parse(assembly: string): Instruction[] {
     if (match) {
       const opCode = match[1]
 
-      if (!POSSIBLE_OPS.has(opCode)) {
-        throw new TypeError(`Invalid opCode: ${opCode}`)
+      // compile time OP_CODE validation
+      if (!POSSIBLE_CPU_OPERATIONS[opCode]) {
+        throw new TypeError(`[PARSER] Invalid opCode: ${opCode}`)
       }
 
       const args = match
@@ -18,12 +20,12 @@ export function parse(assembly: string): Instruction[] {
         .filter((n) => !isNaN(n))
 
       if (args.length === 0) {
-        throw new TypeError(`No args for opCode: ${opCode}`)
+        throw new TypeError(`[PARSER] No args for opCode: ${opCode}`)
       }
 
-      program.push({ opCode: opCode as keyof typeof POSSIBLE_OPS, args })
+      program.push({ opCode: opCode, args: args })
     } else {
-      throw new TypeError(`Invalid code at: ${line}`)
+      throw new TypeError(`[PARSER] Invalid code at: ${line}`)
     }
   }
   return program
@@ -32,7 +34,7 @@ export function parse(assembly: string): Instruction[] {
 export function output(program: Instruction[]): string {
   if (program.length === 0) return '\n'
   let assembly = ''
-  for (let { opCode, args } of program) {
+  for (let { opCode: opCode, args: args } of program) {
     assembly += `${opCode.toString()} ${args.join(', ')}\n`
   }
   return assembly

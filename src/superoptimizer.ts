@@ -25,43 +25,41 @@ export function generateAndSearchPrograms(
     instructionsLength++
   ) {
     const operations = Object.keys(POSSIBLE_CPU_OPERATIONS)
-    // iterating over all mixtures of operations
-    for (const operationCombination of product(operations, instructionsLength)) {
-      const possibleInstructions: Instruction[] = []
-      // iterating over all possible arguments for each operation
-      for (const operation of operationCombination) {
+
+    const possibleInstructions: Instruction[] = operations
+      .map((operation) => {
         switch (operation) {
           case 'LOAD':
-            for (let value = 0; value < maxValue; value++) {
-              possibleInstructions.push({ opCode: operation, args: [value] })
-            }
-            break
+            return [...Array(maxValue).keys()].map((value) => ({
+              opCode: operation,
+              args: [value]
+            }))
           case 'SWAP':
           case 'XOR':
-            for (let cell = 0; cell < maxMemoryCells; cell++) {
-              for (let cell2 = 0; cell2 < maxMemoryCells; cell2++) {
-                possibleInstructions.push({ opCode: operation, args: [cell, cell2] })
-              }
-            }
-            break
+            return product([...Array(maxMemoryCells).keys()], 2).map((cells) => ({
+              opCode: operation,
+              args: [cells[0], cells[1]]
+            }))
           case 'INC':
-            for (let cell = 0; cell < maxMemoryCells; cell++) {
-              possibleInstructions.push({ opCode: operation, args: [cell] })
-            }
-            break
+            return [...Array(maxMemoryCells).keys()].map((cell) => ({
+              opCode: operation,
+              args: [cell]
+            }))
+          default:
+            throw new TypeError(`[SUPEROPTIMIZER] Unknown operation: ${operation}`)
         }
+      })
+      .flat()
+
+    // iterating over all possible instruction combinations
+    for (const instructionCombination of product(possibleInstructions, instructionsLength)) {
+      if (tester(instructionCombination)) {
+        return instructionCombination
       }
+      count++
 
-      // iterating over all possible instruction combinations
-      for (const instructionCombination of product(possibleInstructions, instructionsLength)) {
-        if (tester(instructionCombination)) {
-          return instructionCombination
-        }
-        count++
-
-        if (count % 100000 === 0) {
-          console.log(`[SUPEROPTIMIZER] Programs generated: ${count}`)
-        }
+      if (count % 100000 === 0) {
+        console.log(`[SUPEROPTIMIZER] Programs generated: ${count}`)
       }
     }
   }

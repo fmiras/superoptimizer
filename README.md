@@ -1,4 +1,4 @@
-# superoptimizer-ts
+# superoptimizer
 
 To install dependencies:
 
